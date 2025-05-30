@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Question, Choices, Form, Response
+from .models import Question, Choices, Form, Response,ResponseAnswer
 
 class ChoucesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,5 +43,56 @@ class FormSerializer(serializers.ModelSerializer):
             'title': instance.title,
             'background_color': instance.background_color,
             'questions': questions,
+        }
+        return data
+
+class ResponseAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResponseAnswer
+        exclude = ['updated_at', 'created_at']
+    
+    def to_representation(self, instance):
+        data = {
+            'answer': instance.answer,
+            'answer_to':{
+                'question': instance.answer_to.question,
+                'question_type': instance.answer_to.question_type,
+                },
+        }
+        return data
+    
+class ResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Response
+        exclude = ['updated_at', 'created_at']
+    
+    def to_representation(self, instance):
+        data = {
+            'id': instance.id,
+            'code': instance.code,
+            'form_code': instance.form.code,
+            'responder_email': instance.responder_email,
+            'form': {
+                'code': instance.form.code,
+                'title': instance.form.title,
+                'background_color': instance.form.background_color,
+            },
+            'responses': ResponseAnswerSerializer(instance.responses.all(), many=True).data,
+        }
+        return data
+
+class FormResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Form
+        fields = ['id']
+    
+    def to_representation(self, instance):
+        queryset = Response.objects.filter(form=instance)
+        data = {
+            'id': instance.id,
+            'code': instance.code,
+            'title': instance.title,
+            'background_color': instance.background_color,
+            'responses': ResponseSerializer(queryset, many=True).data,
         }
         return data

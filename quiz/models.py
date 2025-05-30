@@ -45,7 +45,7 @@ class ResponseAnswer(BaseModel):
     answer = models.TextField()  # Store the answer as text
 
     def __str__(self):
-        return f"Answer for {self.question.question} - {self.answer[:50]}"  # Display first 50 characters of the answer
+        return f"{self.answer_to.question}-{self.answer}"
 
 class Response(BaseModel):
     code = models.CharField(max_length=100, unique=True, blank=True)
@@ -54,7 +54,7 @@ class Response(BaseModel):
     responses = models.ManyToManyField(ResponseAnswer, related_name='responses', blank=True)
     
     def __str__(self):  
-        return f"Response by {self.user.username} for {self.form.title}"
+        return self.code
     def save(self, *args, **kwargs):
         if not self.code:
             self.code = generate_random_string(20)
